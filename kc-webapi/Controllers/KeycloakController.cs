@@ -85,5 +85,19 @@ namespace kc_webapi.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("users/{uuid}/roles/{clientid}")]
+        public async Task<IActionResult> getUserRolesClients(string uuid, string clientid = "e48b2629-7413-4eab-98d0-6ec26040c92c")
+        {
+            var json = await CallRestApi(string.Format("users/{0}/role-mappings/clients/{client-uuid}", uuid, clientid));
+            return Ok(json);
+        }
+        [HttpGet]
+        [Route("users/{uuid}")]
+        public async Task<IActionResult> getUserRoles(string uuid)
+        {
+            var json = await CallRestApi(string.Format("users/{0}/role-mappings", uuid));
+            return Ok(json);
+        }
     }
 }
