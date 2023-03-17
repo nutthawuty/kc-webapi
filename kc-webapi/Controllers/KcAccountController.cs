@@ -77,11 +77,17 @@ namespace kc_webapi.Controllers
 
         // PUT api/<KcAccountController>/5
         [HttpPut("{uuid}")]
-        public async Task<IActionResult> Put(string uuid, [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] PutUserRepresentation userModel)
+        public async Task<IActionResult> Put(string uuid, [FromBody] PostUserRepresentation userModel)
         {
             var client = await getClient();
             var res = await client.PutAsJsonAsync(string.Format("users/{0}", uuid), userModel);
             var content = await res.Content.ReadAsStringAsync();
+            // update password
+            if (userModel.credentials.Count > 0)
+            {
+                res = await client.PutAsJsonAsync(string.Format("users/{0}/reset-password", uuid), userModel.credentials.FirstOrDefault());
+                content = await res.Content.ReadAsStringAsync();
+            }
             return Ok(content);
         }
 
