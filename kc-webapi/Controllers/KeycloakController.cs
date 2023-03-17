@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using kc_webapi.Interfaces;
+using kc_webapi.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
@@ -11,40 +13,25 @@ namespace kc_webapi.Controllers
     {
         private readonly ILogger<KeycloakController> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
-        public KeycloakController(ILogger<KeycloakController> logger, IHttpClientFactory httpClientFactory)
+        private IKcService _kcService;
+        public KeycloakController(ILogger<KeycloakController> logger, IHttpClientFactory httpClientFactory, IKcService kc)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _kcService = kc;
         }
 
         [HttpGet]
         [Route("token")]
         public async Task<KeycloakTokenResponse> getToken()
         {
-            var httpClient = _httpClientFactory.CreateClient("keycloak-rest-api");
-            // add payload-data
-            string grant_type = "client_credentials";
-            string client_id = "logic-school";
-            string client_secret = "He7S3RVTZhdil4asBBRspHGzPFJjjlOe";
-            string scope = "profile email";
-            var data = new Dictionary<string, string>();
-            data.Add("client_id", client_id);
-            data.Add("client_secret", client_secret);
-            data.Add("grant_type", grant_type);
-            data.Add("scope", scope);
-            // send request
-            var req = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8080/realms/education/protocol/openid-connect/token") { Content = new FormUrlEncodedContent(data) };
-            var res = await httpClient.SendAsync(req);
-            // read content & convert json to model
-            var jsonStr = await res.Content.ReadAsStringAsync();
-            var resModel = JsonConvert.DeserializeObject<KeycloakTokenResponse>(jsonStr);
-            return resModel;
+            return await _kcService.getToken();
         }
 
         [HttpGet]
-        private async Task<string> CallRestApi(string action)
+        private async Task<string> callRestApi(string action)
         {
-            var tokenModel = await getToken();
+            var tokenModel = await _kcService.getToken();
             var httpclient = _httpClientFactory.CreateClient("keycloak-rest-api");
             httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenModel.AccessToken);
             var res = await httpclient.GetAsync(action);
@@ -56,7 +43,7 @@ namespace kc_webapi.Controllers
         [Route("users")]
         public async Task<IActionResult> getUsers(string? userid)
         {
-            var result = await CallRestApi(!string.IsNullOrEmpty(userid) ? "users/" + userid : "users");
+            var result = await callRestApi(!string.IsNullOrEmpty(userid) ? "users/" + userid : "users");
             return Ok(result);
         }
 
@@ -65,7 +52,7 @@ namespace kc_webapi.Controllers
         [Route("clients")]
         public async Task<IActionResult> getClients()
         {
-            var result = await CallRestApi("clients");
+            var result = await callRestApi("clients");
             return Ok(result);
         }
 
@@ -73,7 +60,7 @@ namespace kc_webapi.Controllers
         [Route("clients/{clientid}/roles")]
         public async Task<IActionResult> getClientRoles(string clientid = "e48b2629-7413-4eab-98d0-6ec26040c92c")
         {
-            var result = await CallRestApi(string.Format("clients/{0}/roles", clientid));
+            var result = await callRestApi(string.Format("clients/{0}/roles", clientid));
             return Ok(result);
         }
 
@@ -81,7 +68,7 @@ namespace kc_webapi.Controllers
         [Route("roles")]
         public async Task<IActionResult> getRoles()
         {
-            var result = await CallRestApi(string.Format("roles"));
+            var result = await callRestApi(string.Format("roles"));
             return Ok(result);
         }
 
@@ -89,14 +76,14 @@ namespace kc_webapi.Controllers
         [Route("users/{uuid}/roles/{clientid}")]
         public async Task<IActionResult> getUserRolesClients(string uuid, string clientid = "e48b2629-7413-4eab-98d0-6ec26040c92c")
         {
-            var json = await CallRestApi(string.Format("users/{0}/role-mappings/clients/{client-uuid}", uuid, clientid));
+            var json = await callRestApi(string.Format("users/{0}/role-mappings/clients/{client-uuid}", uuid, clientid));
             return Ok(json);
         }
         [HttpGet]
         [Route("users/{uuid}")]
         public async Task<IActionResult> getUserRoles(string uuid)
         {
-            var json = await CallRestApi(string.Format("users/{0}/role-mappings", uuid));
+            var json = await callRestApi(string.Format("users/{0}/role-mappings", uuid));
             return Ok(json);
         }
     }

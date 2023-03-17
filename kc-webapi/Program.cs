@@ -1,3 +1,5 @@
+using kc_webapi.Interfaces;
+using kc_webapi.Services;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +18,8 @@ builder.Services.AddHttpClient("keycloak-rest-api", httpclient =>
 {
     httpclient.BaseAddress = new Uri("http://localhost:8080/admin/realms/education/");
 });
+// add MyDependency
+builder.Services.AddTransient<IKcService, KcService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

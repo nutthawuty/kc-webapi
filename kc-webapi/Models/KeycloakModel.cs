@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace kc_webapi
+namespace kc_webapi.Models
 {
     class KeycloakPayload
     {
