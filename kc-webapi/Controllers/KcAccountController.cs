@@ -25,8 +25,7 @@ namespace kc_webapi.Controllers
         private async Task<HttpClient> getClient ()
         {
             var tokenModel = await _kcService.getToken();
-            var httpClient = _httpClientFactory.CreateClient("keycloak-rest-api");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenModel.AccessToken);
+            var httpClient = await _kcService.getClient(tokenModel);
             return httpClient;
         }
         // GET: api/<KcAccountController>
@@ -99,6 +98,16 @@ namespace kc_webapi.Controllers
             var res = await client.DeleteAsync(string.Format("users/{0}", uuid));
             var content = await res.Content.ReadAsStringAsync();
             return Ok(content);
+        }
+
+        [HttpGet("{uuid}/session")]
+        public async Task<IActionResult> GetSession(string uuid)
+        {
+            var client = await getClient();
+            var res = await client.GetAsync(string.Format("users/{0}/sessions", uuid));
+            var content = await res.Content.ReadAsStringAsync();
+            var model = JsonConvert.DeserializeObject<List<UserSessionRepresentation>>(content);
+            return Ok(model);
         }
     }
 }

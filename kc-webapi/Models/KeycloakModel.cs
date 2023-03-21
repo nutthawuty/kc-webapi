@@ -9,6 +9,11 @@ namespace kc_webapi.Models
         public string grant_type { get; set; }
         public string scope { get; set; }
     }
+    public class KeycloakResponse<T>
+    {
+        public string message { get; set; }
+        public T data { get; set; }
+    }
     public class KeycloakTokenResponse
     {
         [JsonProperty("access_token")]
@@ -19,6 +24,9 @@ namespace kc_webapi.Models
 
         [JsonProperty("expires_in")]
         public int ExpiresIn { get; set; }
+
+        [JsonProperty("refresh_token")]
+        public string RefreshToken { get; set; }
 
         [JsonProperty("refresh_expires_in")]
         public int RefreshExpiresIn { get; set; }
