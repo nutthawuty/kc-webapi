@@ -3,7 +3,17 @@ using kc_webapi.Services;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.OpenApi.Models;
 
+var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: myAllowSpecificOrigins, policy => 
+    {
+        policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod();
+    });
+});
 
 // Add services to the container.
 
@@ -49,6 +59,9 @@ builder.Services.AddHttpClient("keycloak-user", httpclient =>
 // add MyDependency
 builder.Services.AddTransient<IKcService, KcService>();
 var app = builder.Build();
+
+// use cors
+app.UseCors(myAllowSpecificOrigins);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
